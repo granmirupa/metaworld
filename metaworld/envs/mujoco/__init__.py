@@ -7,11 +7,11 @@ LOGGER = logging.getLogger(__name__)
 _REGISTERED = False
 
 
-def register_custom_envs():
-    global _REGISTERED
-    if _REGISTERED:
+def register_rl_with_videos_custom_envs():
+    global _RLV_REGISTERED
+    if _RLV_REGISTERED:
         return
-    _REGISTERED = True
+    _RLV_REGISTERED = True
 
     register(id="Image48MetaworldDrawerOpenDense-v0",
             entry_point="multiworld.envs.mujoco.metaworld_image:MetaWorldDrawerOpenEnv",
@@ -38,6 +38,11 @@ def register_custom_envs():
             kwargs={'sparse_reward': True},
              )
 
+def register_custom_envs():
+    global _REGISTERED
+    if _REGISTERED:
+        return
+    _REGISTERED = True
     LOGGER.info("Registering metaworld mujoco gym environments")
 
     """
