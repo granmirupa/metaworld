@@ -13,22 +13,6 @@ def register_rl_with_videos_custom_envs():
         return
     _RLV_REGISTERED = True
 
-    register(id="Image48MetaworldDrawerOpenDense-v0",
-            entry_point="multiworld.envs.mujoco.metaworld_image:MetaWorldDrawerOpenEnv",
-            kwargs={'sparse_reward': False})
-
-    register(id="Image48MetaworldDrawerOpenSparse-v0",
-            entry_point="multiworld.envs.mujoco.metaworld_image:MetaWorldDrawerOpenEnv",
-            kwargs={'sparse_reward': True})
-
-    register(id="Image48MetaworldDrawerOpenSparse2D-v0",
-            entry_point="multiworld.envs.mujoco.metaworld_image:MetaWorldDrawerOpenEnv",
-            kwargs={'sparse_reward': True,
-                    'two_dimensional': True})
-
-    register(id="Image48MetaworldDrawerCloseSparse-v0",
-            entry_point="multiworld.envs.mujoco.metaworld_image:MetaWorldDrawerOpenEnv",
-            kwargs={'env_name': "DrawerClose", 'sparse_reward': True})
 
     register(id="SawyerDrawerOpenEnv-v0",
             entry_point="metaworld.envs.mujoco.sawyer_xyz.sawyer_drawer_open:SawyerDrawerOpenEnv",
