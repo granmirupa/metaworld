@@ -38,10 +38,6 @@ def register_custom_envs():
             kwargs={'sparse_reward': True},
              )
 
-    register(id="AcrobotContinuous-v1",
-            entry_point="multiworld.envs.mujoco.acrobot_continuous:AcrobotContinuousEnv")
-
-
     LOGGER.info("Registering metaworld mujoco gym environments")
 
     """
