@@ -5,7 +5,7 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 _REGISTERED = False
-
+_RLV_REGISTERED = False
 
 def register_rl_with_videos_custom_envs():
     global _RLV_REGISTERED
