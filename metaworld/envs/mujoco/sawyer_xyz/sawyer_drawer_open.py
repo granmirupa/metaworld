@@ -21,13 +21,17 @@ class SawyerDrawerOpenEnv(SawyerXYZEnv):
             goal_low=None,
             goal_high=None,
             rotMode='fixed',
+            sparse_reward=False,
+            two_dimensional=False,
             **kwargs
     ):
+        self._sparse_reward = sparse_reward
         self.quick_init(locals())
         hand_low=(-0.5, 0.40, 0.05)
         hand_high=(0.5, 1, 0.5)
         obj_low=(-0.1, 0.9, 0.04)
         obj_high=(0.1, 0.9, 0.04)
+        self.two_dimensional = two_dimensional
         SawyerXYZEnv.__init__(
             self,
             frame_skip=5,
@@ -42,6 +46,8 @@ class SawyerDrawerOpenEnv(SawyerXYZEnv):
             'obj_init_angle': np.array([0.3, ], dtype=np.float32),
             'obj_init_pos': np.array([0., 0.9, 0.04], dtype=np.float32),
             'hand_init_pos': np.array([0, 0.6, 0.2], dtype=np.float32),
+#            'hand_init_pos': np.array([0.0, 0.85, 0.1], dtype=np.float32),
+           'hand_init_pos': np.array([0.0, 0.5, 0.25], dtype=np.float32),
         }
 
         self.goal = np.array([0., 0.55, 0.04])
@@ -59,7 +65,7 @@ class SawyerDrawerOpenEnv(SawyerXYZEnv):
         assert obs_type in OBS_TYPE
         self.obs_type = obs_type
         self.random_init = random_init
-        self.max_path_length = 150
+        self.max_path_length = 200#150
         self.rotMode = rotMode
         if rotMode == 'fixed':
             self.action_space = Box(
@@ -108,9 +114,20 @@ class SawyerDrawerOpenEnv(SawyerXYZEnv):
 
     @property
     def model_name(self):
+        print("loading xml from", get_asset_full_path('sawyer_xyz/sawyer_drawer.xml'))
         return get_asset_full_path('sawyer_xyz/sawyer_drawer.xml')
 
     def step(self, action):
+        if self.two_dimensional:
+#            print("rotmodeL", self.rotMode)
+#            print("action before:", action)
+            action[0] = 0.0
+#            action[1] = 0.0
+#            action[2] = 0.0
+#            action[3] = 1.0
+#            print("action after:", action)
+
+
         if self.rotMode == 'euler':
             action_ = np.zeros(7)
             action_[:3] = action[:3]
@@ -122,6 +139,7 @@ class SawyerDrawerOpenEnv(SawyerXYZEnv):
             self.set_xyz_action_rotz(action[:4])
         else:
             self.set_xyz_action_rot(action[:7])
+
         self.do_simulation([action[-1], -action[-1]])
         # The marker seems to get reset every time you do a simulation
         # self._set_goal_marker(np.array([0., self._state_goal, 0.05]))
@@ -135,7 +153,7 @@ class SawyerDrawerOpenEnv(SawyerXYZEnv):
             done = True
         else:
             done = False
-        info = {'reachDist': reachDist, 'goalDist': pullDist, 'epRew' : reward, 'pickRew':None, 'success': float(pullDist <= 0.08)}
+        info = {'reachDist': reachDist, 'goalDist': pullDist, 'epRew' : reward, 'success': float(pullDist <= 0.08)}
         info['goal'] = self.goal
         return ob, reward, done, info
 
@@ -242,7 +260,7 @@ class SawyerDrawerOpenEnv(SawyerXYZEnv):
         return self._get_obs()
 
     def _reset_hand(self):
-        for _ in range(10):
+        for _ in range(20):
             self.data.set_mocap_pos('mocap', self.hand_init_pos)
             self.data.set_mocap_quat('mocap', np.array([1, 0, 1, 0]))
             self.do_simulation([-1,1], self.frame_skip)
@@ -274,7 +292,10 @@ class SawyerDrawerOpenEnv(SawyerXYZEnv):
         pullGoal = self._state_goal
 
         pullDist = np.abs(objPos[1] - pullGoal[1])
+
         reachDist = np.linalg.norm(objPos - fingerCOM)
+        if self._sparse_reward:
+            return [pullDist <= 0.08, reachDist, pullDist]
         # reachDistxy = np.linalg.norm(objPos[:-1] - fingerCOM[:-1])
         # zDist = np.linalg.norm(fingerCOM[-1] - self.init_fingerCOM[-1])
         # if reachDistxy < 0.05: #0.02

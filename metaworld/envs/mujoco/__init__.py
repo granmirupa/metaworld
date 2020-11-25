@@ -434,4 +434,4 @@ def create_image_48_sawyer_push_and_reach_arena_env_reset_free_v0():
         normalize=True,
     )
 
-register_custom_envs()
+#register_custom_envs()

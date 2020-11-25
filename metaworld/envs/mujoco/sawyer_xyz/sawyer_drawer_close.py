@@ -21,6 +21,7 @@ class SawyerDrawerCloseEnv(SawyerXYZEnv):
             goal_low=None,
             goal_high=None,
             rotMode='fixed',
+            sparse_reward=False,
             **kwargs
     ):
         self.quick_init(locals())
@@ -37,6 +38,7 @@ class SawyerDrawerCloseEnv(SawyerXYZEnv):
             model_name=self.model_name,
             **kwargs
         )
+        self._sparse_reward = sparse_reward
 
         self.init_config = {
             'obj_init_angle': np.array([0.3, ], dtype=np.float32),
@@ -58,7 +60,7 @@ class SawyerDrawerCloseEnv(SawyerXYZEnv):
         self.obs_type = obs_type
 
         self.random_init = random_init
-        self.max_path_length = 150
+        self.max_path_length = 200
         self.rotMode = rotMode
         if rotMode == 'fixed':
             self.action_space = Box(
@@ -133,7 +135,7 @@ class SawyerDrawerCloseEnv(SawyerXYZEnv):
             done = True
         else:
             done = False
-        info = {'reachDist': reachDist, 'goalDist': pullDist, 'epRew' : reward, 'pickRew':None, 'success': float(pullDist <= 0.06)}
+        info = {'reachDist': reachDist, 'goalDist': pullDist, 'epRew' : reward, 'success': float(pullDist <= 0.06)}
         info['goal'] = self.goal
         return ob, reward, done, info
 
@@ -236,7 +238,7 @@ class SawyerDrawerCloseEnv(SawyerXYZEnv):
         return self._get_obs()
 
     def _reset_hand(self):
-        for _ in range(10):
+        for _ in range(20):
             self.data.set_mocap_pos('mocap', self.hand_init_pos)
             self.data.set_mocap_quat('mocap', np.array([1, 0, 1, 0]))
             self.do_simulation([-1,1], self.frame_skip)
@@ -269,6 +271,8 @@ class SawyerDrawerCloseEnv(SawyerXYZEnv):
 
         pullDist = np.abs(objPos[1] - pullGoal)
 
+        if self._sparse_reward:
+            return [pullDist <= 0.06, reachDist, pullDist]
         # reward = -reachDist - pullDist
         c1 = 1000 ; c2 = 0.01 ; c3 = 0.001
         if reachDist < 0.05:
